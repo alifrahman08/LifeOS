@@ -53,7 +53,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-stone-50">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-stone-200/90 shadow-sm p-6 sm:p-8">
+      <div className="w-full max-w-lg bg-white rounded-2xl border border-stone-200/90 shadow-sm p-6 sm:p-8">
         {/* Tombol Kembali ke Beranda */}
         <div className="mb-5">
           <Link
@@ -87,14 +87,14 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {/* Akun Pengguna Utama */}
             <button
               type="button"
               onClick={() => handleSelectDemoAccount("USER", "budi@lifeos.id", "LifeOS123!")}
-              className={`p-3 text-left rounded-xl border transition-all cursor-pointer bg-white group ${
+              className={`p-2.5 sm:p-3 text-left rounded-xl border transition-all cursor-pointer bg-white group ${
                 selectedDemoRole === "USER"
-                  ? "border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500"
+                  ? "border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500 shadow-xs"
                   : "border-stone-200 hover:border-emerald-500 hover:bg-stone-50/60"
               }`}
             >
@@ -110,9 +110,9 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => handleSelectDemoAccount("ADMIN", "admin@lifeos.id", "AdminLifeOS123!")}
-              className={`p-3 text-left rounded-xl border transition-all cursor-pointer bg-white group ${
+              className={`p-2.5 sm:p-3 text-left rounded-xl border transition-all cursor-pointer bg-white group ${
                 selectedDemoRole === "ADMIN"
-                  ? "border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500"
+                  ? "border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500 shadow-xs"
                   : "border-stone-200 hover:border-emerald-500 hover:bg-stone-50/60"
               }`}
             >
@@ -121,6 +121,24 @@ export default function LoginPage() {
               </div>
               <div className="text-[11px] text-stone-500 truncate mt-0.5 font-mono">
                 admin@lifeos.id
+              </div>
+            </button>
+
+            {/* Akun Demo User */}
+            <button
+              type="button"
+              onClick={() => handleSelectDemoAccount("DEMO", "demo@lifeos.id", "Demo1234!")}
+              className={`p-2.5 sm:p-3 text-left rounded-xl border transition-all cursor-pointer bg-white group ${
+                selectedDemoRole === "DEMO"
+                  ? "border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500 shadow-xs"
+                  : "border-stone-200 hover:border-emerald-500 hover:bg-stone-50/60"
+              }`}
+            >
+              <div className="font-bold text-xs sm:text-sm text-emerald-900 group-hover:text-emerald-700">
+                Demo User
+              </div>
+              <div className="text-[11px] text-stone-500 truncate mt-0.5 font-mono">
+                demo@lifeos.id
               </div>
             </button>
           </div>

@@ -139,7 +139,7 @@ describe("Integrasi Antarmodul & Aturan Keamanan LifeOS", () => {
   });
 
   it("Token reset password terenkripsi aman, tervalidasi, dan mencegah replay attack", async () => {
-    const testUser = await prisma.user.findUnique({ where: { email: "alifr7521@gmail.com" } });
+    const testUser = await prisma.user.findUnique({ where: { email: "budi@lifeos.id" } });
     expect(testUser).toBeDefined();
 
     const token = await createPasswordResetToken({
