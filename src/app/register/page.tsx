@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { registerAction } from "@/actions/auth";
@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -51,6 +52,17 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-stone-50">
       <div className="w-full max-w-md bg-white rounded-2xl border border-stone-200/90 shadow-sm p-6 sm:p-8">
+        {/* Tombol Kembali ke Beranda */}
+        <div className="mb-5">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-emerald-800 transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            <span>Kembali ke Beranda</span>
+          </Link>
+        </div>
+
         <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white flex items-center justify-center font-bold text-base">
@@ -90,23 +102,46 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <Input
-            label="Kata Sandi (Minimal 8 karakter)"
-            type="password"
-            required
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="w-full space-y-1.5">
+            <label className="block text-xs font-medium text-stone-700">
+              Kata Sandi (Minimal 8 karakter)
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white pl-3 pr-10 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-700 rounded-md transition-colors"
+                title={showPassword ? "Sembunyikan kata sandi" : "Lihat kata sandi"}
+                aria-label={showPassword ? "Sembunyikan kata sandi" : "Lihat kata sandi"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
 
-          <Input
-            label="Konfirmasi Kata Sandi"
-            type="password"
-            required
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+          <div className="w-full space-y-1.5">
+            <label className="block text-xs font-medium text-stone-700">
+              Konfirmasi Kata Sandi
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white pl-3 pr-10 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 transition-colors"
+              />
+            </div>
+          </div>
 
           <Button type="submit" size="md" isLoading={isLoading} className="w-full mt-2">
             Buat Akun Saya
