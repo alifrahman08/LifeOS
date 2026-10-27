@@ -3,6 +3,7 @@ import prisma from "../lib/prisma";
 import { calculateBudgetUsage, calculateFinancialSummary } from "../lib/finance";
 import { generateRuleBasedInsights } from "../lib/ai";
 import { calculateTaskPriority } from "../lib/priority";
+import { createPasswordResetToken, verifyPasswordResetToken } from "../lib/auth";
 
 describe("Integrasi Antarmodul & Aturan Keamanan LifeOS", () => {
   it("Perubahan transaksi pengeluaran otomatis menghitung ulang sisa anggaran", async () => {
@@ -135,6 +136,30 @@ describe("Integrasi Antarmodul & Aturan Keamanan LifeOS", () => {
 
     const adminUser = await prisma.user.findUnique({ where: { email: "admin@lifeos.id" } });
     expect(adminUser?.role).toBe("ADMIN");
+  });
+
+  it("Token reset password terenkripsi aman, tervalidasi, dan mencegah replay attack", async () => {
+    const testUser = await prisma.user.findUnique({ where: { email: "alifr7521@gmail.com" } });
+    expect(testUser).toBeDefined();
+
+    const token = await createPasswordResetToken({
+      id: testUser!.id,
+      email: testUser!.email,
+      passwordHash: testUser!.passwordHash,
+    });
+    expect(token).toBeDefined();
+    expect(typeof token).toBe("string");
+
+    // Token valid harus bisa diverifikasi
+    const verified = await verifyPasswordResetToken(token);
+    expect(verified).not.toBeNull();
+    expect(verified?.id).toBe(testUser!.id);
+    expect(verified?.email).toBe(testUser!.email);
+
+    // Token palsu atau diubah harus ditolak
+    const forgedToken = token.slice(0, -5) + "abcde";
+    const invalidVerified = await verifyPasswordResetToken(forgedToken);
+    expect(invalidVerified).toBeNull();
   });
 });
 

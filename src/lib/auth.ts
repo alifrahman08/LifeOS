@@ -112,3 +112,51 @@ export function clearSessionCookie() {
   cookieStore.delete(COOKIE_NAME);
 }
 
+/**
+ * Buat token pengaturan ulang kata sandi (berlaku 1 jam)
+ */
+export async function createPasswordResetToken(user: {
+  id: string;
+  email: string;
+  passwordHash: string;
+}): Promise<string> {
+  return new SignJWT({
+    userId: user.id,
+    email: user.email,
+    hashSig: user.passwordHash.slice(-10),
+    purpose: "reset-password",
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("1h")
+    .sign(JWT_SECRET);
+}
+
+/**
+ * Verifikasi token pengaturan ulang kata sandi
+ */
+export async function verifyPasswordResetToken(
+  token: string
+): Promise<{ id: string; email: string; name: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    if (payload.purpose !== "reset-password") return null;
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId as string },
+      select: { id: true, email: true, name: true, passwordHash: true, isActive: true },
+    });
+
+    if (!user || !user.isActive) return null;
+
+    // Pastikan hash password cocok dengan saat token dibuat
+    if (user.passwordHash.slice(-10) !== payload.hashSig) {
+      return null;
+    }
+
+    return { id: user.id, email: user.email, name: user.name };
+  } catch {
+    return null;
+  }
+}
+

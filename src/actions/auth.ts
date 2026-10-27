@@ -9,7 +9,10 @@ import {
   setSessionCookie,
   clearSessionCookie,
   requireUser,
+  createPasswordResetToken,
+  verifyPasswordResetToken,
 } from "@/lib/auth";
+import { sendPasswordResetEmail } from "@/lib/email";
 
 export interface ActionResult<T = unknown> {
   success: boolean;
@@ -212,5 +215,147 @@ export async function registerAction(formData: FormData): Promise<ActionResult> 
 export async function logoutAction(): Promise<void> {
   clearSessionCookie();
   redirect("/login");
+}
+
+export interface PasswordResetResultData {
+  emailSent: boolean;
+  directLink?: string;
+  email: string;
+}
+
+export async function requestPasswordResetAction(
+  formData: FormData
+): Promise<ActionResult<PasswordResetResultData>> {
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    return { success: false, message: "Masukkan alamat email yang valid." };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      message: `Alamat email "${email}" tidak ditemukan di sistem. Pastikan alamat email sudah benar atau buat akun baru.`,
+    };
+  }
+
+  if (!user.isActive) {
+    return {
+      success: false,
+      message: "Akun ini telah dinonaktifkan oleh administrator. Silakan hubungi dukungan.",
+    };
+  }
+
+  const token = await createPasswordResetToken({
+    id: user.id,
+    email: user.email,
+    passwordHash: user.passwordHash,
+  });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+
+  const sendResult = await sendPasswordResetEmail({
+    to: user.email,
+    name: user.name,
+    resetUrl,
+  });
+
+  // Catat audit log
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "PASSWORD_RESET_REQUESTED",
+      entity: "User",
+      entityId: user.id,
+      details: JSON.stringify({ email: user.email, emailSent: sendResult.sent }),
+    },
+  });
+
+  return {
+    success: true,
+    message: sendResult.message,
+    data: {
+      emailSent: sendResult.sent,
+      directLink: resetUrl,
+      email: user.email,
+    },
+  };
+}
+
+export async function resetPasswordAction(formData: FormData): Promise<ActionResult> {
+  const token = (formData.get("token") as string)?.trim();
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!token) {
+    return {
+      success: false,
+      message: "Token pengaturan ulang kata sandi tidak ditemukan atau tidak valid.",
+    };
+  }
+
+  if (!newPassword || newPassword.length < 8) {
+    return {
+      success: false,
+      message: "Kata sandi baru minimal harus 8 karakter demi keamanan.",
+    };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return {
+      success: false,
+      message: "Konfirmasi kata sandi tidak cocok. Silakan ketik ulang.",
+    };
+  }
+
+  const verified = await verifyPasswordResetToken(token);
+  if (!verified) {
+    return {
+      success: false,
+      message:
+        "Tautan pengaturan ulang kata sandi tidak valid atau telah kedaluwarsa (lebih dari 1 jam). Silakan minta tautan baru.",
+    };
+  }
+
+  const newHash = await hashPassword(newPassword);
+
+  await prisma.user.update({
+    where: { id: verified.id },
+    data: { passwordHash: newHash },
+  });
+
+  // Catat audit log
+  await prisma.auditLog.create({
+    data: {
+      userId: verified.id,
+      action: "PASSWORD_RESET_COMPLETED",
+      entity: "User",
+      entityId: verified.id,
+      details: JSON.stringify({ email: verified.email }),
+    },
+  });
+
+  // Buat notifikasi keamanan sistem untuk pengguna
+  await prisma.notification.create({
+    data: {
+      userId: verified.id,
+      title: "Kata Sandi Berhasil Diperbarui",
+      message:
+        "Kata sandi akun LifeOS Anda baru saja diatur ulang. Jika bukan Anda yang melakukan perubahan ini, segera hubungi admin.",
+      type: "SYSTEM",
+      link: "/app/profile",
+    },
+  });
+
+  return {
+    success: true,
+    message: "Kata sandi Anda berhasil diperbarui! Silakan masuk menggunakan kata sandi baru.",
+  };
 }
 
