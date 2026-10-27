@@ -31,3 +31,4 @@ export default async function HabitsPage() {
 
   return <HabitsClient initialHabits={habitsWithStats as any} />;
 }
+

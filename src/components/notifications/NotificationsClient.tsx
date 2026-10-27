@@ -200,3 +200,4 @@ export function NotificationsClient({ initialNotifications }: NotificationsClien
     </div>
   );
 }
+

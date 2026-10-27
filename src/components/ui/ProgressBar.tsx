@@ -68,3 +68,4 @@ export function EmptyState({ title, description, actionText, onAction, icon }: E
     </div>
   );
 }
+

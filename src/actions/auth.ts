@@ -213,3 +213,4 @@ export async function logoutAction(): Promise<void> {
   clearSessionCookie();
   redirect("/login");
 }
+

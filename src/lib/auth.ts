@@ -111,3 +111,4 @@ export function clearSessionCookie() {
   const cookieStore = cookies();
   cookieStore.delete(COOKIE_NAME);
 }
+

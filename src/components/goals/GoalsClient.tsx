@@ -365,3 +365,4 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     </div>
   );
 }
+

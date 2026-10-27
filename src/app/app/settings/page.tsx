@@ -23,3 +23,4 @@ export default async function SettingsPage() {
 
   return <SettingsClient preferences={preferences || defaultPrefs} />;
 }
+

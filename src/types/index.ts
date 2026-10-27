@@ -71,3 +71,4 @@ export interface AIInsightRecommendation {
   actionText?: string;
   actionUrl?: string;
 }
+

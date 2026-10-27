@@ -17,3 +17,4 @@ export default async function GoalsPage() {
 
   return <GoalsClient initialGoals={goals as any} />;
 }
+

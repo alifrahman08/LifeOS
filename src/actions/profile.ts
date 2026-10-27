@@ -150,3 +150,4 @@ export async function deleteAccountAction(password: string): Promise<ActionResul
 
   return { success: true, message: "Akun Anda dan seluruh data terkait telah dihapus secara permanen." };
 }
+

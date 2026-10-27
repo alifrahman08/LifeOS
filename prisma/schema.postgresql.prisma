@@ -384,3 +384,4 @@ model Announcement {
   createdAt DateTime @default(now()) @db.Timestamptz
   updatedAt DateTime @updatedAt @db.Timestamptz
 }
+

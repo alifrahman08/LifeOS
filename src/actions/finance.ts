@@ -315,3 +315,4 @@ export async function addSavingsContributionAction(
     message: type === "DEPOSIT" ? "Setoran tabungan berhasil dicatat!" : "Penarikan tabungan berhasil dicatat.",
   };
 }
+

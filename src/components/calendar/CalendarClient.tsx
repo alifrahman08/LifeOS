@@ -429,3 +429,4 @@ export function CalendarClient({ initialEvents, tasksWithDates }: CalendarClient
     </div>
   );
 }
+

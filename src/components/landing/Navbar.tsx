@@ -2,25 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Sparkles, Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { demoLoginAction } from "@/actions/auth";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
-
-  const handleDemoClick = async () => {
-    setIsDemoLoading(true);
-    try {
-      const res = await demoLoginAction();
-      if (res.success) {
-        window.location.href = "/app/dashboard";
-      }
-    } finally {
-      setIsDemoLoading(false);
-    }
-  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-stone-200/80 bg-stone-50/90 backdrop-blur-md">
@@ -59,16 +45,6 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDemoClick}
-            isLoading={isDemoLoading}
-            className="text-emerald-800 hover:text-emerald-900 hover:bg-emerald-50"
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1" />
-            Coba Demo
-          </Button>
           <Link href="/login">
             <Button variant="outline" size="sm">
               Masuk
@@ -113,15 +89,6 @@ export function Navbar() {
             </Link>
           </nav>
           <div className="pt-3 border-t border-stone-100 flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="md"
-              onClick={handleDemoClick}
-              isLoading={isDemoLoading}
-              className="w-full text-emerald-800 border-emerald-200"
-            >
-              Lihat Demo Interaktif
-            </Button>
             <div className="grid grid-cols-2 gap-2">
               <Link href="/login" className="w-full">
                 <Button variant="outline" size="md" className="w-full">
@@ -140,3 +107,4 @@ export function Navbar() {
     </header>
   );
 }
+

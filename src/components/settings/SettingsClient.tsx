@@ -315,3 +315,4 @@ export function SettingsClient({ preferences: initialPrefs }: SettingsClientProp
     </div>
   );
 }
+

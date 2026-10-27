@@ -377,3 +377,4 @@ export function HabitsClient({ initialHabits }: HabitsClientProps) {
     </div>
   );
 }
+

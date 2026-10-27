@@ -148,3 +148,4 @@ export function ProfileClient({ user }: ProfileClientProps) {
     </div>
   );
 }
+

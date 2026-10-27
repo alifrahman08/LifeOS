@@ -1,26 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { demoLoginAction } from "@/actions/auth";
 
 export function Hero() {
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
-
-  const handleDemoClick = async () => {
-    setIsDemoLoading(true);
-    try {
-      const res = await demoLoginAction();
-      if (res.success) {
-        window.location.href = "/app/dashboard";
-      }
-    } finally {
-      setIsDemoLoading(false);
-    }
-  };
-
   return (
     <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden bg-gradient-to-b from-stone-50 via-stone-50 to-stone-100/60">
       {/* Subtle background glow */}
@@ -52,16 +37,6 @@ export function Hero() {
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleDemoClick}
-            isLoading={isDemoLoading}
-            className="w-full sm:w-auto gap-2 text-base px-6 border-stone-300 text-stone-800 hover:bg-white"
-          >
-            <Sparkles className="w-4 h-4 text-emerald-700" />
-            Lihat Demo Langsung
-          </Button>
         </div>
 
         {/* Trust Badges */}
@@ -83,3 +58,4 @@ export function Hero() {
     </section>
   );
 }
+

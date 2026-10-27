@@ -74,3 +74,4 @@ describe("Habit Tracker & Perhitungan Streak", () => {
     expect(isHabitScheduledForDate(weekdayHabit, sunday)).toBe(false);
   });
 });
+

@@ -293,3 +293,4 @@ export function Topbar({ user, notifications = [] }: TopbarProps) {
     </header>
   );
 }
+
