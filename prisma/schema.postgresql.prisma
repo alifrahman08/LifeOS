@@ -1,0 +1,386 @@
+// PostgreSQL / Supabase Schema for LifeOS
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         String    @default("USER") // USER, ADMIN, DEMO
+  avatarUrl    String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @db.Timestamptz
+
+  profile             Profile?
+  preferences         UserPreferences?
+  tasks               Task[]
+  taskCategories      TaskCategory[]
+  calendarEvents      CalendarEvent[]
+  habits              Habit[]
+  habitCheckIns       HabitCheckIn[]
+  goals               Goal[]
+  financialAccounts   FinancialAccount[]
+  transactions        Transaction[]
+  transactionCategories TransactionCategory[]
+  budgets             Budget[]
+  savingsGoals        SavingsGoal[]
+  notifications       Notification[]
+  insights            AIInsight[]
+  auditLogs           AuditLog[]
+
+  @@index([email])
+}
+
+model Profile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                 String?
+  phone               String?
+  occupation          String?
+  location            String?
+  onboardingCompleted Boolean  @default(false)
+  createdAt           DateTime @default(now()) @db.Timestamptz
+  updatedAt           DateTime @updatedAt @db.Timestamptz
+}
+
+model UserPreferences {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency          String   @default("IDR")
+  timezone          String   @default("Asia/Jakarta")
+  firstDayOfWeek    Int      @default(1) // 1 = Senin, 0 = Minggu
+  dateFormat        String   @default("DD/MM/YYYY")
+  timeFormat        String   @default("24h")
+  theme             String   @default("light") // light, dark, system
+  notifyEmail       Boolean  @default(true)
+  notifyBrowser     Boolean  @default(true)
+  notifyHabits      Boolean  @default(true)
+  notifyBudget      Boolean  @default(true)
+  notifyDeadlines   Boolean  @default(true)
+  aiInsightsEnabled Boolean  @default(true)
+  createdAt         DateTime @default(now()) @db.Timestamptz
+  updatedAt         DateTime @updatedAt @db.Timestamptz
+}
+
+model TaskCategory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String   @default("#0d9488")
+  createdAt DateTime @default(now()) @db.Timestamptz
+  tasks     Task[]
+
+  @@index([userId])
+}
+
+model Task {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  description       String?
+  dueDate           DateTime?     @db.Timestamptz
+  dueTime           String?       // format HH:mm
+  priority          String        @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status            String        @default("INBOX")  // INBOX, PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
+  categoryId        String?
+  category          TaskCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags              String?       // JSON array of strings
+  estimatedDuration Int?          // Menit
+  actualDuration    Int?          // Menit
+  recurringRule     String?       // DAILY, WEEKLY, MONTHLY
+  isRecurring       Boolean       @default(false)
+  goalId            String?
+  goal              Goal?         @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  order             Int           @default(0)
+  completedAt       DateTime?     @db.Timestamptz
+  createdAt         DateTime      @default(now()) @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @db.Timestamptz
+
+  subtasks       TaskSubtask[]
+  calendarEvents CalendarEvent[]
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+}
+
+model TaskSubtask {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  @@index([taskId])
+}
+
+model CalendarEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  startTime     DateTime @db.Timestamptz
+  endTime       DateTime @db.Timestamptz
+  isAllDay      Boolean  @default(false)
+  location      String?
+  category      String   @default("GENERAL") // GENERAL, WORK, PERSONAL, HEALTH, STUDY
+  recurringRule String?  // DAILY, WEEKLY, MONTHLY
+  taskId        String?
+  task          Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  goalId        String?
+  goal          Goal?    @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now()) @db.Timestamptz
+  updatedAt     DateTime @updatedAt @db.Timestamptz
+
+  @@index([userId, startTime])
+}
+
+model Habit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  category    String   @default("HEALTH") // HEALTH, PRODUCTIVITY, LEARNING, MINDFULNESS, FINANCE
+  frequency   String   @default("DAILY")  // DAILY, WEEKDAYS, WEEKENDS, CUSTOM
+  customDays  String?  // JSON array e.g. [1,2,3,4,5] (1=Senin)
+  targetType  String   @default("BOOLEAN") // BOOLEAN, NUMERIC
+  targetValue Float?   // e.g. 2000 (ml), 30 (menit)
+  unit        String?  // ml, menit, halaman
+  color       String   @default("#0d9488")
+  icon        String   @default("check-circle")
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+
+  checkIns HabitCheckIn[]
+
+  @@index([userId, isArchived])
+}
+
+model HabitCheckIn {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // format YYYY-MM-DD
+  value     Float    @default(1)
+  notes     String?
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+}
+
+model Goal {
+  id               String          @id @default(cuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  category         String          @default("PERSONAL") // CAREER, FINANCE, HEALTH, LEARNING, PERSONAL
+  targetType       String          @default("NUMERIC")  // NUMERIC, MILESTONE, COMPLETION
+  targetValue      Float           @default(100)
+  currentValue     Float           @default(0)
+  unit             String?         // Rp, Buku, Jam, %
+  startDate        DateTime        @default(now()) @db.Timestamptz
+  targetDate       DateTime?       @db.Timestamptz
+  status           String          @default("ACTIVE") // PLANNED, ACTIVE, COMPLETED, PAUSED, CANCELLED
+  isAutoCalculated Boolean         @default(false)
+  autoSource       String?         // TASKS, SAVINGS, MILESTONES
+  createdAt        DateTime        @default(now()) @db.Timestamptz
+  updatedAt        DateTime        @updatedAt @db.Timestamptz
+
+  milestones     GoalMilestone[]
+  tasks          Task[]
+  calendarEvents CalendarEvent[]
+
+  @@index([userId, status])
+}
+
+model GoalMilestone {
+  id          String    @id @default(cuid())
+  goalId      String
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title       String
+  targetDate  DateTime? @db.Timestamptz
+  isCompleted Boolean   @default(false)
+  completedAt DateTime? @db.Timestamptz
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+
+  @@index([goalId])
+}
+
+model TransactionCategory {
+  id        String        @id @default(cuid())
+  userId    String?       // null = bawaan sistem, terisi = kategori kustom pengguna
+  user      User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  type      String        // INCOME, EXPENSE
+  icon      String?
+  color     String?
+  isDefault Boolean       @default(false)
+  createdAt DateTime      @default(now()) @db.Timestamptz
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@index([userId, type])
+}
+
+model FinancialAccount {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  type          String        @default("BANK") // BANK, E_WALLET, CASH, SAVINGS
+  balance       Decimal       @default(0) @db.Decimal(15, 2)
+  accountNumber String?
+  color         String?
+  createdAt     DateTime      @default(now()) @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @db.Timestamptz
+
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+model Transaction {
+  id            String               @id @default(cuid())
+  userId        String
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  amount        Decimal              @db.Decimal(15, 2)
+  type          String               // INCOME, EXPENSE, TRANSFER
+  date          DateTime             @default(now()) @db.Timestamptz
+  categoryId    String?
+  category      TransactionCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  accountId     String?
+  account       FinancialAccount?    @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  notes         String?
+  isRecurring   Boolean              @default(false)
+  recurringRule String?              // MONTHLY, WEEKLY
+  createdAt     DateTime             @default(now()) @db.Timestamptz
+  updatedAt     DateTime             @updatedAt @db.Timestamptz
+
+  @@index([userId, date])
+  @@index([userId, type])
+}
+
+model Budget {
+  id               String              @id @default(cuid())
+  userId           String
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId       String
+  category         TransactionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  month            Int                 // 1 - 12
+  year             Int                 // e.g. 2026
+  amount           Decimal             @db.Decimal(15, 2)
+  warningThreshold Float               @default(80) // Persentase peringatan (contoh: 80%)
+  createdAt        DateTime            @default(now()) @db.Timestamptz
+  updatedAt        DateTime            @updatedAt @db.Timestamptz
+
+  @@unique([userId, categoryId, month, year])
+  @@index([userId, month, year])
+}
+
+model SavingsGoal {
+  id            String                @id @default(cuid())
+  userId        String
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  targetAmount  Decimal               @db.Decimal(15, 2)
+  currentAmount Decimal               @default(0) @db.Decimal(15, 2)
+  targetDate    DateTime?             @db.Timestamptz
+  color         String                @default("#0d9488")
+  icon          String                @default("piggy-bank")
+  createdAt     DateTime              @default(now()) @db.Timestamptz
+  updatedAt     DateTime              @updatedAt @db.Timestamptz
+
+  contributions SavingsContribution[]
+
+  @@index([userId])
+}
+
+model SavingsContribution {
+  id            String      @id @default(cuid())
+  savingsGoalId String
+  savingsGoal   SavingsGoal @relation(fields: [savingsGoalId], references: [id], onDelete: Cascade)
+  amount        Decimal     @db.Decimal(15, 2)
+  type          String      @default("DEPOSIT") // DEPOSIT, WITHDRAWAL
+  date          DateTime    @default(now()) @db.Timestamptz
+  notes         String?
+  createdAt     DateTime    @default(now()) @db.Timestamptz
+
+  @@index([savingsGoalId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // TASK, HABIT, BUDGET, GOAL, SYSTEM
+  link      String?  // URL dalam aplikasi
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([userId, isRead])
+}
+
+model AIInsight {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  summary    String
+  type       String   @default("RECOMMENDATION") // WEEKLY_SUMMARY, RECOMMENDATION, WARNING, FINANCE
+  sourceData String?  // JSON data fakta terukur
+  isHelpful  Boolean? // Feedback pengguna
+  createdAt  DateTime @default(now()) @db.Timestamptz
+
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // USER_LOGIN, PROFILE_UPDATE, ADMIN_STATUS_CHANGE, DATA_EXPORT, etc.
+  entity    String   // User, Task, Transaction, etc.
+  entityId  String?
+  details   String?  // JSON data yang disamarkan (tanpa password/kredensial)
+  ipAddress String?
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  type      String   @default("INFO") // INFO, UPDATE, ALERT
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+}
