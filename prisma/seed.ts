@@ -605,7 +605,7 @@ async function main() {
     const savings1 = await prisma.savingsGoal.create({
       data: {
         userId,
-        name: "Dana Liburan Jepang Akhir Tahun",
+        name: "Dana Ranu Kumbolo Awal Tahun",
         targetAmount: 20000000,
         currentAmount: 14500000,
         targetDate: new Date(today.getFullYear(), 11, 20),
